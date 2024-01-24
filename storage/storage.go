@@ -86,3 +86,42 @@ func Connect() (*sql.DB, error) {
 
 	return db, nil
 }
+
+func UpdateUser(userId string, updatedUser *models.User) (*models.User, error) {
+	db, err := Connect()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	respUser := models.User{}
+
+	err = db.QueryRow(`UPDATE users SET name = $1, last_name = $2 WHERE id = $3 RETURNING id, name, last_name`,
+		updatedUser.FirstName, updatedUser.LastName, userId).
+		Scan(&respUser.Id, &respUser.FirstName, &respUser.LastName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &respUser, nil
+}
+
+func DeleteUser(userId string) (*models.User, error) {
+	db, err := Connect()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	respUser := models.User{}
+
+	err = db.QueryRow(`DELETE FROM users WHERE id = $1 RETURNING id, name, last_name`, userId).
+		Scan(&respUser.Id, &respUser.FirstName, &respUser.LastName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &respUser, nil
+}
